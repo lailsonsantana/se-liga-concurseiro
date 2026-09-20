@@ -1,0 +1,42 @@
+services:
+  concursos-mcp:
+    build: .
+    container_name: concursos-mcp
+    hostname: concursos-mcp
+    restart: always
+    volumes:
+      - ./mcp-concursos:/mcp
+    command: python3 /mcp/ferramentas.py
+    ports:
+      - "9000:8000"
+    networks:
+      - rede-concursos
+  cargos-mcp:
+    build: .
+    container_name: cargos-mcp
+    hostname: cargos-mcp
+    restart: always
+    volumes:
+      - ./mcp-cargos:/mcp
+    command: python3 /mcp/ferramentas.py
+    ports:
+      - "9001:8000"
+    networks:
+      - rede-concursos
+  cronogramas-mcp:
+    build: .
+    container_name: cronogramas-mcp
+    hostname: cronogramas-mcp
+    restart: always
+    volumes:
+      - ./mcp-cronogramas:/mcp
+    command: python3 /mcp/ferramentas.py
+    ports:
+      - "9002:8000"
+    networks:
+      - rede-concursos
+
+networks:
+  rede-concursos:
+    external: true
+

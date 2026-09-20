@@ -1,0 +1,60 @@
+services:
+  concursos:
+    build: .
+    container_name: concursos
+    hostname: concursos
+    restart: always
+    volumes: 
+      - ./concursos:/servico
+    ports: 
+      - 8000:5000
+    command: python3 /servico/servico.py
+    networks: 
+      - rede-concursos
+  cargos:
+    build: .
+    container_name: cargos
+    hostname: cargos
+    restart: always
+    volumes: 
+      - ./cargos:/servico
+    ports: 
+      - 8001:5000
+    command: python3 /servico/servico.py
+    networks: 
+      - rede-concursos
+  cronogramas:
+    build: .
+    container_name: cronogramas
+    hostname: cronogramas
+    restart: always
+    volumes: 
+      - ./cronogramas:/servico
+    ports: 
+      - 8002:5000
+    command: python3 /servico/servico.py
+    networks: 
+      - rede-concursos
+
+  dados:
+    image: postgres:latest
+    container_name: dados
+    hostname: dados
+    restart: always
+    ports:
+      - "8003:5432"
+    volumes:
+      - ./seligaconcurseiro.sql:/docker-entrypoint-initdb.d/seligaconcurseiro.sql
+    environment:
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_USER=admin
+      - POSTGRES_DB=seligaconcurseiro
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    networks:
+      - rede-concursos
+
+networks:
+  rede-concursos:
+    external: true
+

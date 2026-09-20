@@ -1,0 +1,40 @@
+name: seligaconcurseiro-client
+
+services:
+  librechat:
+    image: ghcr.io/danny-avila/librechat-dev:latest
+    container_name: seligaconcurseiro-librechat
+    hostname: seligaconcurseiro-librechat
+    restart: always
+    env_file:
+      - .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: "3080"
+      MONGO_URI: mongodb://seligaconcurseiro-librechat-db:27017/LibreChat
+      DOMAIN_CLIENT: http://localhost:3080
+      DOMAIN_SERVER: http://localhost:3080
+      ENDPOINTS: google
+      SEARCH: "false"
+      ALLOW_REGISTRATION: "true"
+      SCHEDULES_SINGLE_PROCESS: "true"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "3080:3080"
+    volumes:
+      - ./librechat.yaml:/app/librechat.yaml
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:8.0.20
+    container_name: seligaconcurseiro-librechat-db
+    hostname: seligaconcurseiro-librechat-db
+    restart: always
+    command: mongod --noauth
+    volumes:
+      - mongodata:/data/db
+
+volumes:
+  mongodata:
