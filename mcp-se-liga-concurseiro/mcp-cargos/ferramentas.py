@@ -1,4 +1,6 @@
 from mcp.server.mcpserver import MCPServer
+import json
+from urllib.error import HTTPError, URLError
 import urllib.request as requisicao
 from urllib.parse import quote
 
@@ -16,14 +18,56 @@ def acessar(url):
     sucesso, conteudo, erro = False, None, None
 
     try:
-        resposta = requisicao.urlopen(url)
+        with requisicao.urlopen(url) as resposta:
+            conteudo = resposta.read().decode("utf-8")
         if resposta.code == 200:
             sucesso = True
-            conteudo = resposta.read().decode("utf-8")
-    except Exception as e:
-        print(f"Erro ao acessar {url}: {e}")
+        else:
+            erro = erro_padronizado(
+                502,
+                "Resposta inválida do serviço",
+                "O serviço retornou um status HTTP inesperado.",
+                url,
+            )
+    except HTTPError as e:
+        erro = ler_erro_da_api(e, url)
+    except URLError:
+        erro = erro_padronizado(
+            503,
+            "Serviço indisponível",
+            "Não foi possível acessar o serviço no momento.",
+            url,
+        )
 
     return sucesso, conteudo, erro
+
+
+def erro_padronizado(status, titulo, detalhe, instancia):
+    return {
+        "type": f"https://httpstatuses.com/{status}",
+        "title": titulo,
+        "status": status,
+        "detail": detalhe,
+        "instance": instancia,
+    }
+
+
+def ler_erro_da_api(resposta, url):
+    try:
+        erro = json.loads(resposta.read().decode("utf-8"))
+        if isinstance(erro, dict) and all(
+            campo in erro for campo in ("type", "title", "status", "detail", "instance")
+        ):
+            return erro
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        pass
+
+    return erro_padronizado(
+        resposta.code or 502,
+        "Erro retornado pelo serviço",
+        "O serviço retornou uma resposta de erro inválida.",
+        url,
+    )
 
 
 @mcp.tool(
@@ -70,7 +114,7 @@ def get_cargos():
     if sucesso:
         return conteudo
     else:
-        return {"erro": "Não foi possível acessar o serviço de cargos."}
+        return erro
 
 
 @mcp.tool(
@@ -105,7 +149,7 @@ def get_cargos_por_id_concurso(id_concurso):
     if sucesso:
         return conteudo
     else:
-        return {"erro": "Não foi possível acessar o serviço de cargos."}
+        return erro
 
 
 @mcp.tool(
@@ -137,7 +181,7 @@ def get_cargos_por_nome(nome):
     if sucesso:
         return conteudo
     else:
-        return {"erro": "Não foi possível acessar o serviço de cargos."}
+        return erro
 
 
 if __name__ == "__main__":
