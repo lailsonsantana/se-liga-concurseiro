@@ -16,20 +16,30 @@ LibreChat (http://localhost:3080)
     +-- MCP Concursos    (http://localhost:9000/mcp)
     +-- MCP Cargos       (http://localhost:9001/mcp)
     +-- MCP Cronogramas  (http://localhost:9002/mcp)
-                                  |
-                                  +-- API Concursos    (http://localhost:8000)
-                                  +-- API Cargos       (http://localhost:8001)
-                                  +-- API Cronogramas  (http://localhost:8002)
-                                  +-- PostgreSQL       (localhost:8003)
+
+MCP Concursos    ---> API Concursos    (http://localhost:8000) --\
+MCP Cargos       ---> API Cargos       (http://localhost:8001) ---+--> PostgreSQL
+MCP Cronogramas  ---> API Cronogramas  (http://localhost:8002) --/    (localhost:8003)
 ```
+
+O fluxo de acesso aos dados é:
+
+1. O LibreChat conversa com os servidores MCP.
+2. Cada servidor MCP chama sua API REST correspondente.
+3. As APIs REST consultam o PostgreSQL e devolvem os dados aos MCPs.
+4. Os MCPs entregam os resultados ao LibreChat.
+
+Os servidores MCP não acessam o banco de dados diretamente. O acesso ao
+PostgreSQL é responsabilidade exclusiva das APIs REST.
 
 Os serviços Docker usam a rede externa `rede-concursos`. Ela permite que:
 
 - as APIs encontrem o PostgreSQL pelo hostname `dados`;
 - os servidores MCP encontrem as APIs pelos hostnames `concursos`, `cargos` e
-  `cronogramas`;
-- o LibreChat, executado no contêiner, acesse os MCPs publicados no host por
-  `host.docker.internal`.
+  `cronogramas`.
+
+O LibreChat, executado no contêiner, acessa os MCPs publicados no host por
+`host.docker.internal`.
 
 ## Requisitos
 
