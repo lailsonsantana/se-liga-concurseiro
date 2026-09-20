@@ -3,17 +3,20 @@ import psycopg as dados
 from psycopg.rows import dict_row as dicionario
 from flask_cors import CORS
 
+from dados.configuracao import (
+    NOME_BANCO,
+    PORTA_BANCO,
+    SENHA_BANCO,
+    SERVIDOR_BANCO,
+    USUARIO_BANCO,
+)
+from dados.sql import SQL_CRONOGRAMA
+
 servico = Flask("cronogramas")
 CORS(servico)
 
 DESCRICAO = "serviço para gerenciamento dos cronogramas dos concursos"
 VERSAO = "1.0"
-
-SERVIDOR_BANCO = "dados"
-PORTA_BANCO = 5432
-USUARIO_BANCO = "admin"
-SENHA_BANCO = "admin"
-NOME_BANCO = "seligaconcurseiro"
 
 def get_conexao_com_bd():
     conexao = dados.connect(
@@ -33,23 +36,9 @@ def get_info():
 
 @servico.get("/cronogramas")
 def get_cronogramas():
-    cronogramas = []
-
     conexao = get_conexao_com_bd()
     cursor = conexao.cursor()
-    cursor.execute(
-    """
-    SELECT 
-        concurso_id,
-        orgao_concurso AS orgao,
-        solicitado,
-        autorizado,
-        edital_publicado,
-        isencao_taxa,
-        inscricoes_abertas AS data_inicio_inscricoes
-    FROM DB_CRONOGRAMA
-    """
-)
+    cursor.execute(SQL_CRONOGRAMA)
     
     cronogramas = cursor.fetchall()
     
@@ -61,24 +50,12 @@ def get_cronogramas():
 
 @servico.get("/cronogramas/concurso/<int:id_concurso>")
 def get_cronogramas_por_id_concurso(id_concurso):
-    cronogramas = []
-
     conexao = get_conexao_com_bd()
     cursor = conexao.cursor()
     cursor.execute(
-    """
-    SELECT 
-        concurso_id,
-        orgao_concurso AS orgao,
-        solicitado,
-        autorizado,
-        edital_publicado,
-        isencao_taxa,
-        inscricoes_abertas AS data_inicio_inscricoes
-    FROM DB_CRONOGRAMA
-    WHERE concurso_id = %s
-    """, (id_concurso,)
-)
+        f"{SQL_CRONOGRAMA} WHERE concurso_id = %s",
+        (id_concurso,)
+    )
     
     cronogramas = cursor.fetchall()
     cronogramas = jsonify(cronogramas)
@@ -89,24 +66,12 @@ def get_cronogramas_por_id_concurso(id_concurso):
 
 @servico.get("/cronogramas/orgao/<string:orgao>")
 def get_cronogramas_por_orgao(orgao):
-    cronogramas = []
-
     conexao = get_conexao_com_bd()
     cursor = conexao.cursor()
     cursor.execute(
-    """
-    SELECT 
-        concurso_id,
-        orgao_concurso AS orgao,
-        solicitado,
-        autorizado,
-        edital_publicado,
-        isencao_taxa,
-        inscricoes_abertas AS data_inicio_inscricoes
-    FROM DB_CRONOGRAMA
-    WHERE lower(orgao_concurso) LIKE %s
-    """, (f"%{orgao.lower()}%",)
-)
+        f"{SQL_CRONOGRAMA} WHERE lower(orgao_concurso) LIKE %s",
+        (f"%{orgao.lower()}%",)
+    )
     
     cronogramas = cursor.fetchall()
     cronogramas = jsonify(cronogramas)

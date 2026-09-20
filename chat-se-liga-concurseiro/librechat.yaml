@@ -5,11 +5,9 @@ mcpServers:
   concursos:
     type: streamable-http
     url: http://host.docker.internal:9000/mcp
-
   cargos:
     type: streamable-http
     url: http://host.docker.internal:9001/mcp
-
   cronogramas:
     type: streamable-http
     url: http://host.docker.internal:9002/mcp
@@ -19,6 +17,21 @@ mcpSettings:
     - "host.docker.internal:9000"
     - "host.docker.internal:9001"
     - "host.docker.internal:9002"
+
+modelSpecs:
+  enforce: true
+  prioritize: true
+  list:
+    - name: gemini-flash-lite
+      label: Gemini 3.5 Flash-Lite
+      default: true
+      mcpServers:
+        - concursos
+        - cargos
+        - cronogramas
+      preset:
+        endpoint: google
+        model: gemini-3.5-flash-lite
 
 
     

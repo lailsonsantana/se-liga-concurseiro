@@ -3,17 +3,20 @@ import psycopg as dados
 from psycopg.rows import dict_row as dicionario
 from flask_cors import CORS
 
+from dados.configuracao import (
+    NOME_BANCO,
+    PORTA_BANCO,
+    SENHA_BANCO,
+    SERVIDOR_BANCO,
+    USUARIO_BANCO,
+)
+from dados.sql import SQL_CONCURSO
+
 servico = Flask("concursos")
 CORS(servico)
 
 DESCRICAO = "serviço de gerenciamento de concursos"
 VERSAO = "1.0"
-
-SERVIDOR_BANCO = "dados"
-PORTA_BANCO = 5432
-USUARIO_BANCO = "admin"
-SENHA_BANCO = "admin"
-NOME_BANCO = "seligaconcurseiro"
 
 def get_conexao_com_bd():
     conexao = dados.connect(
@@ -33,22 +36,9 @@ def get_info():
 
 @servico.get("/concursos")
 def get_concursos():
-    concursos = []
-
     conexao = get_conexao_com_bd()
     cursor = conexao.cursor()
-    cursor.execute(
-    """
-    SELECT 
-        co.id AS concurso_id,
-        cr.orgao_concurso AS nome,
-        co.orgao,
-        co.banca,
-        co.situacao_atual AS situacao
-    FROM DB_CONCURSO co
-    LEFT JOIN DB_CRONOGRAMA cr ON cr.concurso_id = co.id
-    """
-)
+    cursor.execute(SQL_CONCURSO)
 
     concursos = cursor.fetchall()
     concursos = jsonify(concursos)
@@ -59,23 +49,9 @@ def get_concursos():
 
 @servico.get("/concursos/<int:id_concurso>")
 def get_concurso_por_id(id_concurso):
-    concursos = []
-
     conexao = get_conexao_com_bd()
     cursor = conexao.cursor()
-    cursor.execute(
-    """
-    SELECT 
-        co.id AS concurso_id,
-        cr.orgao_concurso AS nome,
-        co.orgao,
-        co.banca,
-        co.situacao_atual AS situacao
-    FROM DB_CONCURSO co
-    LEFT JOIN DB_CRONOGRAMA cr ON cr.concurso_id = co.id
-    WHERE co.id = %s
-    """, (id_concurso,)
-    )
+    cursor.execute(f"{SQL_CONCURSO} WHERE id = %s", (id_concurso,))
     
     concursos = cursor.fetchall()
     concursos = jsonify(concursos)
@@ -86,23 +62,12 @@ def get_concurso_por_id(id_concurso):
 
 @servico.get("/concursos/orgao/<string:orgao>")
 def get_concursos_por_orgao(orgao):
-    concursos = []
-
     conexao = get_conexao_com_bd()
     cursor = conexao.cursor()
     cursor.execute(
-    """
-    SELECT 
-        id AS concurso_id,
-        orgao,
-        cidade,
-        estado,
-        banca,
-        situacao_atual
-    FROM DB_CONCURSO
-    WHERE lower(orgao) LIKE %s
-    """, (f"%{orgao.lower()}%",)
-)
+        f"{SQL_CONCURSO} WHERE lower(orgao) LIKE %s",
+        (f"%{orgao.lower()}%",)
+    )
     
     concursos = cursor.fetchall()
     concursos = jsonify(concursos)

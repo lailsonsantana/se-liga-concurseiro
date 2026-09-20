@@ -1,8 +1,7 @@
 FROM python:latest
 
-RUN pip3 install flask
-RUN pip3 install psycopg[binary]
-RUN pip3 install flask-cors
+COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
 
 RUN mkdir /servico
 WORKDIR /servico
